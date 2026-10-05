@@ -1,0 +1,49 @@
+name: Build Release APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract ZIP
+        run: unzip -q telegram-launcher.zip
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Install dependencies
+        run: |
+          cd telegram-launcher
+          npm install
+
+      - name: Prebuild Android project
+        run: |
+          cd telegram-launcher
+          npx expo prebuild --clean
+
+      - name: Build Release APK
+        run: |
+          cd telegram-launcher/android
+          ./gradlew assembleRelease
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: telegram-launcher-release-apk
+          path: telegram-launcher/android/app/build/outputs/apk/release/*.apk
